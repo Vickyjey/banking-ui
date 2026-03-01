@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import API from "../services/api";
-import { getAuth, setAuth } from "../services/auth";
+import { setAuth } from "../services/auth";
 
 function Login() {
   const [username, setUsername] = useState("");
@@ -9,15 +9,6 @@ function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const auth = getAuth();
-    if (auth) {
-      navigate(auth.role === "ADMIN" ? "/admin" : "/dashboard", {
-        replace: true,
-      });
-    }
-  }, [navigate]);
 
   const handleLogin = async (event) => {
     event.preventDefault();
@@ -46,7 +37,7 @@ function Login() {
         replace: true,
       });
     } catch (apiError) {
-      setError(apiError?.response?.data?.message || "Invalid credentials.");
+      setError(apiError?.response?.data?.message || "Password is incorrect");
     } finally {
       setLoading(false);
     }
@@ -87,6 +78,9 @@ function Login() {
         />
 
         {error && <p className="status error">{error}</p>}
+        <p className="auth-switch">
+          <Link to="/forgot-password">Forgot password?</Link>
+        </p>
 
         <button className="btn btn-primary" type="submit" disabled={loading}>
           {loading ? "Signing in..." : "Sign in"}

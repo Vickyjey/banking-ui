@@ -19,6 +19,11 @@ function Dashboard() {
         path: "/deposit",
       },
       {
+        title: "Withdraw Funds",
+        detail: "Withdraw money and reduce account balance instantly.",
+        path: "/withdraw",
+      },
+      {
         title: "Transfer Money",
         detail: "Move funds between accounts instantly.",
         path: "/transfer",

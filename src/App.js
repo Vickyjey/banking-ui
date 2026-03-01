@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Navigate, Route, Routes } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
 import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import CreateAccount from "./pages/CreateAccount";
@@ -8,27 +9,21 @@ import Transfer from "./pages/Transfer";
 import Transactions from "./pages/Transactions";
 import Balance from "./pages/Balance";
 import Deposit from "./pages/Deposit";
+import Withdraw from "./pages/Withdraw";
 import AdminDashboard from "./pages/AdminDashboard";
 import Support from "./pages/Support";
 import Loan from "./pages/Loan";
 import AdminSupportInbox from "./pages/AdminSupportInbox";
 import AdminSupportConversation from "./pages/AdminSupportConversation";
 import AdminLoans from "./pages/AdminLoans";
-import { getAuth } from "./services/auth";
 
 function App() {
-  const auth = getAuth();
-  const homeRoute = auth
-    ? auth.role === "ADMIN"
-      ? "/admin"
-      : "/dashboard"
-    : "/login";
-
   return (
     <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Routes>
-        <Route path="/" element={<Navigate to={homeRoute} replace />} />
+        <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/register" element={<Register />} />
 
         <Route
@@ -84,6 +79,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Deposit />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/withdraw"
+          element={
+            <ProtectedRoute>
+              <Withdraw />
             </ProtectedRoute>
           }
         />

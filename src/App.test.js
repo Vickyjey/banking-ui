@@ -38,3 +38,9 @@ test("renders support route for authenticated users", () => {
   render(<App />);
   expect(screen.getByText(/customer support/i)).toBeInTheDocument();
 });
+
+test("renders forgot password page route", () => {
+  window.history.pushState({}, "", "/forgot-password");
+  render(<App />);
+  expect(screen.getByText(/forgot password/i)).toBeInTheDocument();
+});

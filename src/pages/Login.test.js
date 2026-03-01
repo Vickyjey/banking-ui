@@ -80,3 +80,42 @@ test("redirects admins to admin dashboard after login", async () => {
     expect(mockNavigate).toHaveBeenCalledWith("/admin", { replace: true })
   );
 });
+
+test("shows incorrect password message when login fails", async () => {
+  API.post.mockRejectedValue({
+    response: {
+      data: {
+        message: "Password is incorrect",
+      },
+    },
+  });
+
+  render(
+    <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <Login />
+    </MemoryRouter>
+  );
+
+  fireEvent.change(screen.getByLabelText(/username/i), {
+    target: { value: "wronguser" },
+  });
+  fireEvent.change(screen.getByLabelText(/password/i), {
+    target: { value: "wrongpass" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: /sign in/i }));
+
+  expect(await screen.findByText(/password is incorrect/i)).toBeInTheDocument();
+});
+
+test("renders forgot password link", () => {
+  render(
+    <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <Login />
+    </MemoryRouter>
+  );
+
+  expect(screen.getByRole("link", { name: /forgot password\?/i })).toHaveAttribute(
+    "href",
+    "/forgot-password"
+  );
+});
