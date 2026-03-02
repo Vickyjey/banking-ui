@@ -27,14 +27,32 @@ function AdminLoans() {
     fetchLoans();
   }, [fetchLoans]);
 
-  const approveLoan = async (loanId) => {
+  const approveLoan = async (loanId, requestedBy) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to approve loan ${loanId}${requestedBy ? ` for ${requestedBy}` : ""}?`
+    );
+    if (!confirmed) {
+      return;
+    }
+
     setProcessingId(loanId);
     setError("");
     setMessage("");
 
     try {
       await API.put(`/loans/${loanId}/approve`);
-      setMessage(`Loan ${loanId} approved.`);
+      if (requestedBy) {
+        try {
+          await API.post("/support/messages", {
+            username: requestedBy,
+            message: `Your loan request #${loanId} has been approved.`,
+          });
+        } catch (notificationError) {
+          // Approval must not fail if notification delivery fails.
+        }
+      }
+
+      setMessage(`Loan ${loanId} approved successfully.`);
       await fetchLoans();
     } catch (apiError) {
       setError(apiError?.response?.data?.message || "Unable to approve loan.");
@@ -113,7 +131,7 @@ function AdminLoans() {
                           <button
                             className="btn btn-primary"
                             type="button"
-                            onClick={() => approveLoan(loan.id)}
+                            onClick={() => approveLoan(loan.id, loan.requestedBy)}
                             disabled={processingId === loan.id}
                           >
                             {processingId === loan.id ? "Approving..." : "Approve"}

@@ -239,6 +239,27 @@ input {
   color: var(--ink-900);
 }
 
+.tile-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.tile-badge {
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(135deg, #1c78ed, #165eca);
+}
+
 .tile-detail {
   display: block;
   margin-top: 6px;

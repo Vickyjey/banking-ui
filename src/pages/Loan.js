@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 
@@ -9,6 +9,7 @@ const loanTypeOptions = [
   "Education Loan",
   "Gold Loan",
 ];
+const APPROVED_LOAN_IDS_KEY = "approved_loan_ids_seen";
 
 function Loan() {
   const [accountNumber, setAccountNumber] = useState("");
@@ -19,23 +20,83 @@ function Loan() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [approvalNotice, setApprovalNotice] = useState("");
+  const seenApprovedLoanIdsRef = useRef(new Set());
   const navigate = useNavigate();
 
-  const fetchLoans = useCallback(async () => {
-    setLoading(true);
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(APPROVED_LOAN_IDS_KEY);
+      if (!stored) {
+        return;
+      }
+
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed)) {
+        seenApprovedLoanIdsRef.current = new Set(parsed);
+      }
+    } catch (storageError) {
+      seenApprovedLoanIdsRef.current = new Set();
+    }
+  }, []);
+
+  const persistSeenApprovedLoans = () => {
+    localStorage.setItem(
+      APPROVED_LOAN_IDS_KEY,
+      JSON.stringify(Array.from(seenApprovedLoanIdsRef.current))
+    );
+  };
+
+  const fetchLoans = useCallback(async (showLoading = true) => {
+    if (showLoading) {
+      setLoading(true);
+    }
+
     try {
       const response = await API.get("/loans");
-      setLoans(response.data || []);
+      const nextLoans = response.data || [];
+      setLoans(nextLoans);
       setError("");
+
+      const newlyApproved = [];
+      for (const loan of nextLoans) {
+        if (loan?.status !== "APPROVED" || loan?.id === undefined || loan?.id === null) {
+          continue;
+        }
+
+        if (!seenApprovedLoanIdsRef.current.has(loan.id)) {
+          seenApprovedLoanIdsRef.current.add(loan.id);
+          newlyApproved.push(loan.id);
+        }
+      }
+
+      if (newlyApproved.length > 0) {
+        persistSeenApprovedLoans();
+        if (newlyApproved.length === 1) {
+          setApprovalNotice(`Loan ${newlyApproved[0]} has been approved.`);
+        } else {
+          setApprovalNotice(`${newlyApproved.length} loans have been approved.`);
+        }
+      }
     } catch (apiError) {
       setError(apiError?.response?.data?.message || "Unable to load loans.");
     } finally {
-      setLoading(false);
+      if (showLoading) {
+        setLoading(false);
+      }
     }
   }, []);
 
   useEffect(() => {
     fetchLoans();
+
+    const intervalId = window.setInterval(() => {
+      fetchLoans(false);
+    }, 15000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
   }, [fetchLoans]);
 
   const handleApplyLoan = async (event) => {
@@ -136,6 +197,7 @@ function Loan() {
           </form>
           {error && <p className="status error">{error}</p>}
           {success && <p className="status success">{success}</p>}
+          {approvalNotice && <p className="status success">{approvalNotice}</p>}
         </section>
 
         <section className="panel">

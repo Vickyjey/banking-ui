@@ -6,9 +6,12 @@ import API from "../services/api";
 jest.mock("../services/api", () => ({
   get: jest.fn(),
   put: jest.fn(),
+  post: jest.fn(),
 }));
 
 test("loads admin loan requests and approves pending loan", async () => {
+  jest.spyOn(window, "confirm").mockReturnValue(true);
+
   let callIndex = 0;
   API.get.mockImplementation((url) => {
     if (url === "/loans") {
@@ -45,6 +48,7 @@ test("loads admin loan requests and approves pending loan", async () => {
     return Promise.resolve({ data: [] });
   });
   API.put.mockResolvedValue({ data: {} });
+  API.post.mockResolvedValue({ data: {} });
 
   render(
     <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
@@ -56,5 +60,13 @@ test("loads admin loan requests and approves pending loan", async () => {
   fireEvent.click(screen.getByRole("button", { name: /approve/i }));
 
   await waitFor(() => expect(API.put).toHaveBeenCalledWith("/loans/10/approve"));
-  await waitFor(() => expect(screen.getByText(/loan 10 approved/i)).toBeInTheDocument());
+  await waitFor(() =>
+    expect(API.post).toHaveBeenCalledWith("/support/messages", {
+      username: "alice",
+      message: "Your loan request #10 has been approved.",
+    })
+  );
+  await waitFor(() =>
+    expect(screen.getByText(/loan 10 approved successfully/i)).toBeInTheDocument()
+  );
 });

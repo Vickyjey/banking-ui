@@ -8,6 +8,11 @@ jest.mock("../services/api", () => ({
   post: jest.fn(),
 }));
 
+beforeEach(() => {
+  jest.clearAllMocks();
+  localStorage.clear();
+});
+
 test("loads loans and submits a new loan application", async () => {
   let loadIndex = 0;
   const loanPages = [
@@ -119,4 +124,30 @@ test("shows validation error for invalid loan amount", async () => {
 
   expect(screen.getByText(/loan amount must be greater than zero/i)).toBeInTheDocument();
   expect(API.post).not.toHaveBeenCalled();
+});
+
+test("shows approval notification when a loan is approved", async () => {
+  API.get.mockResolvedValue({
+    data: [
+      {
+        id: 44,
+        accountNumber: "ACC-9001",
+        loanType: "Home Loan",
+        loanAmount: 125000,
+        status: "APPROVED",
+        requestedBy: "alice",
+        requestedAt: "2026-03-02T10:00:00",
+      },
+    ],
+  });
+
+  render(
+    <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <Loan />
+    </MemoryRouter>
+  );
+
+  await waitFor(() =>
+    expect(screen.getByText(/loan 44 has been approved/i)).toBeInTheDocument()
+  );
 });
